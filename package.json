@@ -1,0 +1,16 @@
+{
+  "name": "renderer",
+  "version": "0.1.0",
+  "description": "Simple SSG for documentation with ASCII art support",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Yuki Sireneva <yuki.utk8g@gmail.com>",
+  "license": "SEE LICENSE IN license.txt",
+  "dependencies": {
+    "aasvg": "^0.4.0",
+    "highlight.js": "^11.9.0",
+    "markdown-it": "^14.1.0"
+  }
+}
