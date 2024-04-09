@@ -54,20 +54,40 @@ async function traverseToc(toc, options, dirs = []) {
 async function renderToc(root, dir, selected, toc) {
     const formatEntry = (dirs, entry, isSelected) => {
         const ref = root + dirs.map(part => `${part}/`).join('') + `${entry}.html`;
-        return `<li ${selected == entry ? `class="toc-selected"` : ``}>
+        return `<div ${selected == entry ? `class="toc-selected"` : ``}>
             <a href="${ref}">
                 ${entry}
             </a>
-        </li>`;
+        </div>`;
     };
+
+    const formatHeader = (dir) => {
+        if (!dir) {
+            return '';
+        }
+
+        // Make this collapsable
+        return `<div class="toc-section">
+            ${dir}
+        </div>`;
+    }
 
     let rendered = '';
     await traverseToc(toc, {
-        pre: async () => rendered += '<ul>',
-        post: async () => rendered += '</ul>',
+        pre: async (dirs) => rendered += formatHeader(dirs.at(-1)) + `<div class="toc-div">`,
+        post: async () => rendered += '</div>',
         leaf: async (dirs, entry) => rendered += formatEntry(dirs, entry, selected == entry),
     });
-    return rendered;
+    return `
+        <div class="toc-header">
+            <div class="toc-header-name">
+                sunwalker-box
+            </div>
+        </div>
+        <div class="toc-content">
+            ${rendered}
+        </div>
+    `;
 }
 
 async function convert(dirs, entry, toc) {
@@ -86,22 +106,22 @@ async function convert(dirs, entry, toc) {
 
     const static_root = `${root}static`;
     const rendered = `<html>
-    <head>
-        <title>${entry}</title>
-        <link rel="stylesheet" href="${static_root}/default.css">
-        <link rel="stylesheet" href="${static_root}/highlight.js.css">
-    </head>
-    <body>
-        <div class="toc">
-            ${rendered_toc}
-        </div>
-        <div class="content-box">
-            <div class="content">
-                ${content}
+        <head>
+            <title>${entry}</title>
+            <link rel="stylesheet" href="${static_root}/default.css">
+            <link rel="stylesheet" href="${static_root}/highlight.js.css">
+        </head>
+        <body>
+            <div class="toc">
+                ${rendered_toc}
             </div>
-        </div>
-    </body>
-</html>`;
+            <div class="content-box">
+                <div class="content">
+                    ${content}
+                </div>
+            </div>
+        </body>
+    </html>`;
 
     await fs.writeFile(output_filename, rendered);
 }

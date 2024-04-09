@@ -17,10 +17,35 @@ body {
     border-right: 2px solid #f0f0f0;
     background-color: #ffffff;
     z-index: 1;
+
+    display: flex;
+    flex-direction: column;
 }
 
 .toc-selected {
     font-weight: bold;
+}
+
+.toc-section {
+    font-weight: bold;
+    font-style: italic;
+}
+
+.toc-div {
+    margin-left: 1em;
+}
+
+.toc-header {
+    border-bottom: 2px solid #f0f0f0;
+    padding: 1em;
+}
+
+.toc-header-name {
+    font-size: 1.5em;
+}
+
+.toc-content {
+    padding: 1em;
 }
 
 .content-box {
