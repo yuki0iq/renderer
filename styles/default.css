@@ -1,0 +1,37 @@
+body {
+    font-family: sans-serif;
+
+    display: flex;
+    flex-direction: row;
+
+    height: 100%;
+    margin: 0;
+
+    overflow: auto;
+}
+
+.toc {
+    flex: 0 0 15em;
+    overflow: auto;
+
+    border-right: 2px solid #f0f0f0;
+    background-color: #ffffff;
+    z-index: 1;
+}
+
+.toc-selected {
+    font-weight: bold;
+}
+
+.content-box {
+    flex: 1 0 0;
+    overflow: auto;
+}
+
+.content {
+    max-width: 64em;
+    text-align: justify;
+
+    margin-left: auto;
+    margin-right: auto;
+}

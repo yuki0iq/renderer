@@ -6,6 +6,7 @@ import hljs from 'highlight.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import YAML from 'yaml';
+import url from 'node:url';
 
 const md = markdownit({
     typographer: true,
@@ -50,9 +51,9 @@ async function traverseToc(toc, options, dirs = []) {
 }
 
 
-async function renderToc(dir, selected, toc) {
+async function renderToc(root, dir, selected, toc) {
     const formatEntry = (dirs, entry, isSelected) => {
-        const ref = '../'.repeat(dir.length) + dirs.map(part => `${part}/`).join('') + `${entry}.html`;
+        const ref = root + dirs.map(part => `${part}/`).join('') + `${entry}.html`;
         return `<li ${selected == entry ? `class="toc-selected"` : ``}>
             <a href="${ref}">
                 ${entry}
@@ -77,27 +78,27 @@ async function convert(dirs, entry, toc) {
     const output_filename = path.join(output_dir, entry + '.html');
 
     // TODO Add header and styles?
-    const rendered_toc = await renderToc(dirs, entry, toc);
+    const root = '../'.repeat(dirs.length);
+    const rendered_toc = await renderToc(root, dirs, entry, toc);
 
     const input = await fs.readFile(input_filename, 'utf8');
     const content = md.render(input);
 
+    const static_root = `${root}static`;
     const rendered = `<html>
     <head>
         <title>${entry}</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
-        <style>
-            .toc-selected {
-                font-weight: 900;
-            }
-        </style>
+        <link rel="stylesheet" href="${static_root}/default.css">
+        <link rel="stylesheet" href="${static_root}/highlight.js.css">
     </head>
     <body>
         <div class="toc">
             ${rendered_toc}
         </div>
-        <div class="content">
-            ${content}
+        <div class="content-box">
+            <div class="content">
+                ${content}
+            </div>
         </div>
     </body>
 </html>`;
@@ -105,9 +106,20 @@ async function convert(dirs, entry, toc) {
     await fs.writeFile(output_filename, rendered);
 }
 
+async function makeStatic() {
+    const dir = path.join('Rendered', 'static');
+    await fs.mkdir(dir, { recursive: true });
+
+    const resolve = where => url.fileURLToPath(import.meta.resolve(where));
+
+    await fs.copyFile(resolve("highlight.js/styles/default.css"), path.join(dir, 'highlight.js.css'));
+    await fs.copyFile(resolve("./styles/default.css"), path.join(dir, 'default.css'));
+}
+
 const toc = await getToc();
 await traverseToc(toc, {
     pre: (dirs) => fs.mkdir(path.join('Rendered', ...dirs), { recursive: true }),
     leaf: (dirs, entry) => convert(dirs, entry, toc)
 });
+await makeStatic();
 
