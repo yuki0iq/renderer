@@ -32,7 +32,7 @@ async function getToc() {
 }
 
 async function traverseToc(toc, options, dirs = []) {
-    (options.pre || (() => {}))();
+    await (options.pre || (async () => {}))(dirs);
     for (const entry of toc) {
         if (typeof (entry) === 'string') {
             await options.leaf(dirs, entry);
@@ -46,7 +46,7 @@ async function traverseToc(toc, options, dirs = []) {
             );
         }
     }
-    (options.post || (() => {}))();
+    await (options.post || (async () => {}))();
 }
 
 
@@ -62,8 +62,8 @@ async function renderToc(dir, selected, toc) {
 
     let rendered = '';
     await traverseToc(toc, {
-        pre: () => rendered += '<ul>',
-        post: () => rendered += '</ul>',
+        pre: async () => rendered += '<ul>',
+        post: async () => rendered += '</ul>',
         leaf: async (dirs, entry) => rendered += formatEntry(dirs, entry, selected == entry),
     });
     return rendered;
@@ -102,10 +102,12 @@ async function convert(dirs, entry, toc) {
     </body>
 </html>`;
 
-    await fs.mkdir(output_dir, { recursive: true });
     await fs.writeFile(output_filename, rendered);
 }
 
 const toc = await getToc();
-await traverseToc(toc, { leaf: (dirs, entry) => convert(dirs, entry, toc) });
+await traverseToc(toc, {
+    pre: (dirs) => fs.mkdir(path.join('Rendered', ...dirs), { recursive: true }),
+    leaf: (dirs, entry) => convert(dirs, entry, toc)
+});
 
