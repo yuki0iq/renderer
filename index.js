@@ -5,7 +5,6 @@ import markdownit from 'markdown-it';
 import hljs from 'highlight.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { ReadStream } from 'node:fs';
 import YAML from 'yaml';
 
 const md = markdownit({
@@ -32,13 +31,14 @@ async function getToc() {
     return YAML.parse(toc);
 }
 
-async function traverseToc(toc, dirs = []) {
+async function traverseToc(toc, options, dirs = []) {
+    (options.pre || (() => {}))();
     for (const entry of toc) {
         if (typeof (entry) === 'string') {
-            await convert(dirs, entry, toc);
+            await options.leaf(dirs, entry);
         } else {
             const traverser = async ([dir, inner_toc]) => {
-                await traverseToc(inner_toc, [...dirs, dir]);
+                await traverseToc(inner_toc, options, [...dirs, dir]);
             };
 
             await Promise.all(
@@ -46,14 +46,27 @@ async function traverseToc(toc, dirs = []) {
             );
         }
     }
+    (options.post || (() => {}))();
 }
 
 
 async function renderToc(dir, selected, toc) {
-    return `
-        <p>Selected ${selected} of ${dir}</p>
-        <p>TOC ${toc}</p>
-    `;
+    const formatEntry = (dirs, entry, isSelected) => {
+        const ref = '../'.repeat(dir.length) + dirs.map(part => `${part}/`).join('') + `${entry}.html`;
+        return `<li ${selected == entry ? `class="toc-selected"` : ``}>
+            <a href="${ref}">
+                ${entry}
+            </a>
+        </li>`;
+    };
+
+    let rendered = '';
+    await traverseToc(toc, {
+        pre: () => rendered += '<ul>',
+        post: () => rendered += '</ul>',
+        leaf: async (dirs, entry) => rendered += formatEntry(dirs, entry, selected == entry),
+    });
+    return rendered;
 }
 
 async function convert(dirs, entry, toc) {
@@ -73,6 +86,11 @@ async function convert(dirs, entry, toc) {
     <head>
         <title>${entry}</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+        <style>
+            .toc-selected {
+                font-weight: 900;
+            }
+        </style>
     </head>
     <body>
         <div class="toc">
@@ -89,5 +107,5 @@ async function convert(dirs, entry, toc) {
 }
 
 const toc = await getToc();
-await traverseToc(toc);
+await traverseToc(toc, { leaf: (dirs, entry) => convert(dirs, entry, toc) });
 
