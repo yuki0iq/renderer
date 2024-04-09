@@ -50,11 +50,13 @@ async function traverseToc(toc, options, dirs = []) {
     await (options.post || (async () => {}))();
 }
 
-
-async function renderToc(root, dir, selected, toc) {
-    const formatEntry = (dirs, entry, isSelected) => {
+async function renderToc(root, current_dir, selected, toc) {
+    const formatEntry = (dirs, entry) => {
         const ref = root + dirs.map(part => `${part}/`).join('') + `${entry}.html`;
-        return `<div ${selected == entry ? `class="toc-selected"` : ``}>
+        const isSelected = entry === selected
+            && current_dir.length === dirs.length
+            && current_dir.every((x, i) => x === dirs[i]);
+        return `<div ${isSelected ? `class="toc-selected"` : ``}>
             <a href="${ref}">
                 ${entry}
             </a>
@@ -76,7 +78,7 @@ async function renderToc(root, dir, selected, toc) {
     await traverseToc(toc, {
         pre: async (dirs) => rendered += formatHeader(dirs.at(-1)) + `<div class="toc-div">`,
         post: async () => rendered += '</div>',
-        leaf: async (dirs, entry) => rendered += formatEntry(dirs, entry, selected == entry),
+        leaf: async (dirs, entry) => rendered += formatEntry(dirs, entry),
     });
     return `
         <div class="toc-header">
