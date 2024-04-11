@@ -137,7 +137,7 @@ async function convert(dirs, entry, toc, every_item) {
     const static_root = `${root}static`;
     const rendered = `<html>
         <head>
-            <title>${entry}</title>
+            <title>${title}</title>
             <link rel="stylesheet" href="${static_root}/default.css">
             <link rel="stylesheet" href="${static_root}/highlight.js.css">
         </head>
