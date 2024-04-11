@@ -47,37 +47,42 @@ async function traverseToc(toc, options, dirs = []) {
             );
         }
     }
-    await (options.post || (async () => {}))();
+    await (options.post || (async () => {}))(dirs);
 }
 
-async function renderToc(root, current_dir, selected, toc) {
+async function renderToc(root, current_dirs, selected, toc) {
     const formatEntry = (dirs, entry) => {
         const ref = root + dirs.map(part => `${part}/`).join('') + `${entry}.html`;
         const isSelected = entry === selected
-            && current_dir.length === dirs.length
-            && current_dir.every((x, i) => x === dirs[i]);
-        return `<div ${isSelected ? `class="toc-selected"` : ``}>
+            && current_dirs.length === dirs.length
+            && current_dirs.every((x, i) => x === dirs[i]);
+        return `<li class="toc-entry ${isSelected ? `toc-selected` : ``}">
             <a href="${ref}">
                 ${entry}
             </a>
-        </div>`;
+        </li>`;
     };
 
-    const formatHeader = (dir) => {
+    const formatHeader = (dirs) => {
+        const dir = dirs.at(-1);
         if (!dir) {
-            return '';
+            return '<ul class="toc-list">';
         }
 
-        // Make this collapsable
-        return `<div class="toc-section">
-            ${dir}
-        </div>`;
+        const isSelected = dirs.length <= current_dirs.length
+            && dirs.every((x, i) => x === current_dirs[i]);
+        return `<details class="toc-section" ${isSelected ? `open` : ``}>
+            <summary class="toc-section-header">
+                ${dir}
+            </summary>
+            <ul class="toc-list">
+        `;
     }
 
     let rendered = '';
     await traverseToc(toc, {
-        pre: async (dirs) => rendered += formatHeader(dirs.at(-1)) + `<div class="toc-div">`,
-        post: async () => rendered += '</div>',
+        pre: async (dirs) => rendered += formatHeader(dirs),
+        post: async (dirs) => rendered += '</ul>' + (dirs ? '</details>' : ''),
         leaf: async (dirs, entry) => rendered += formatEntry(dirs, entry),
     });
     return `
