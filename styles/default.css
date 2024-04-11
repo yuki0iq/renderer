@@ -51,6 +51,8 @@ body {
 .content-box {
     flex: 1 0 0;
     overflow: auto;
+
+    padding: 0em 2em;
 }
 
 .content {
