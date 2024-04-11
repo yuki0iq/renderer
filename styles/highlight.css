@@ -1,0 +1,26 @@
+@import 'highlight.default.css' screen and (prefers-color-scheme: light);
+@import 'highlight.dark.css' screen and (prefers-color-scheme: dark);
+
+pre {
+    border-radius: .5em;
+    padding: .5em;
+
+    overflow: auto;
+}
+
+:not(pre) > code {
+    padding: .25em;
+    border-radius: .25em;
+}
+
+@media (prefers-color-scheme: dark) {
+    code, pre {
+        background-color: #2c2c2c;
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    code, pre {
+        background-color: #f0f0f0;
+    }
+}

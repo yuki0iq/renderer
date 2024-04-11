@@ -1,0 +1,28 @@
+a {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+
+@media (prefers-color-scheme: dark) {
+    a {
+        color: #509bd9;
+    }
+
+    a:hover {
+        color: #1f76bf;
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    a {
+        color: #1070c0;
+    }
+
+    a:hover {
+        color: #2090f0;
+    }
+}

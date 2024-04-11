@@ -139,7 +139,6 @@ async function convert(dirs, entry, toc, every_item) {
         <head>
             <title>${title}</title>
             <link rel="stylesheet" href="${static_root}/default.css">
-            <link rel="stylesheet" href="${static_root}/highlight.js.css">
         </head>
         <body>
             <div class="toc">
@@ -171,8 +170,11 @@ async function makeStatic() {
 
     const resolve = where => url.fileURLToPath(import.meta.resolve(where));
 
-    await fs.copyFile(resolve("highlight.js/styles/default.css"), path.join(dir, 'highlight.js.css'));
-    await fs.copyFile(resolve("./styles/default.css"), path.join(dir, 'default.css'));
+    await fs.copyFile(resolve("highlight.js/styles/a11y-light.css"), path.join(dir, 'highlight.default.css'));
+    await fs.copyFile(resolve("highlight.js/styles/a11y-dark.css"), path.join(dir, 'highlight.dark.css'));
+    for (const style of ["default", "headers", "highlight", "links", "toc"]) {
+        await fs.copyFile(resolve(`./styles/${style}.css`), path.join(dir, `${style}.css`));
+    }
 }
 
 async function flattenToc(toc) {
