@@ -135,7 +135,7 @@ async function convert(dirs, entry, toc, every_item) {
     const headless_content = content.replace(title_regex, '');
 
     const static_root = `${root}static`;
-    const rendered = `<html>
+    const rendered = `<!DOCTYPE html><html>
         <head>
             <title>${title}</title>
             <link rel="stylesheet" href="${static_root}/default.css">
