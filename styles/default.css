@@ -87,3 +87,44 @@ pre {
     padding: .25em;
     border-radius: .25em;
 }
+
+.navigation {
+    display: flex;
+}
+
+.navigation-filler {
+    flex: 1 0 0;
+}
+
+a {
+    color: #1070c0;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #2090f0;
+    text-decoration: underline;
+}
+
+header, footer { 
+    hr {
+        border: #f0f0f0 .1em solid;
+    }
+}
+
+header > h1 {
+    margin: .25em 0;
+}
+
+h1 {
+    font-size: 2em;
+}
+
+h2 {
+    font-size: 1.5em;
+}
+
+.content > footer {
+    margin-bottom: 1em;
+    padding-top: .5em;
+}

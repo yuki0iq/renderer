@@ -50,9 +50,13 @@ async function traverseToc(toc, options, dirs = []) {
     await (options.post || (async () => {}))(dirs);
 }
 
+function formatPath(dirs, entry) {
+    return dirs.map(part => `${part}/`).join('') + `${entry}.html`;
+}
+
 async function renderToc(root, current_dirs, selected, toc) {
     const formatEntry = (dirs, entry) => {
-        const ref = root + dirs.map(part => `${part}/`).join('') + `${entry}.html`;
+        const ref = root + formatPath(dirs, entry);
         const isSelected = entry === selected
             && current_dirs.length === dirs.length
             && current_dirs.every((x, i) => x === dirs[i]);
@@ -97,19 +101,38 @@ async function renderToc(root, current_dirs, selected, toc) {
     `;
 }
 
-async function convert(dirs, entry, toc) {
+async function convert(dirs, entry, toc, every_item) {
     const input_filename = path.join('Source', ...dirs, entry + '.md');
     console.log(`Converting ${input_filename}...`);
 
     const output_dir = path.join('Rendered', ...dirs);
     const output_filename = path.join(output_dir, entry + '.html');
 
-    // TODO Add header and styles?
     const root = '../'.repeat(dirs.length);
     const rendered_toc = await renderToc(root, dirs, entry, toc);
 
+    const self_path = formatPath(dirs, entry);
+    const self_index = every_item.indexOf(self_path);
+    const prev_ref = every_item.at(self_index - 1);
+    const next_ref = every_item.at(self_index + 1);
+
+    const formatNavigationLink = (ref, name) => !ref ? '' : `<div class="navigation-link">
+        <a href="${root + ref}">
+            ${name}
+        </a>
+    </div>`;
+    const navigation = `<div class="navigation">
+        ${formatNavigationLink(prev_ref, `Previous page`)}
+        <div class="navigation-filler"></div>
+        ${formatNavigationLink(next_ref, `Next page`)}
+    </div>`;
+
     const input = await fs.readFile(input_filename, 'utf8');
     const content = md.render(input);
+
+    const title_regex = /<h1>(.+?)<\/h1>/;
+    const title = (content.match(title_regex) || []).at(1);
+    const headless_content = content.replace(title_regex, '');
 
     const static_root = `${root}static`;
     const rendered = `<html>
@@ -124,7 +147,16 @@ async function convert(dirs, entry, toc) {
             </div>
             <div class="content-box">
                 <div class="content">
-                    ${content}
+                    <header>
+                        <h1>${title}</h1>
+                        ${navigation}
+                        <hr>
+                    </header>
+                    ${headless_content}
+                    <footer>
+                        <hr>
+                        ${navigation}
+                    </footer>
                 </div>
             </div>
         </body>
@@ -143,10 +175,21 @@ async function makeStatic() {
     await fs.copyFile(resolve("./styles/default.css"), path.join(dir, 'default.css'));
 }
 
+async function flattenToc(toc) {
+    let result = [];
+
+    await traverseToc(toc, {
+        leaf: async (dirs, entry) => result.push(formatPath(dirs, entry)),
+    });
+
+    return result;
+}
+
 const toc = await getToc();
+const every_item = await flattenToc(toc);
 await traverseToc(toc, {
     pre: (dirs) => fs.mkdir(path.join('Rendered', ...dirs), { recursive: true }),
-    leaf: (dirs, entry) => convert(dirs, entry, toc)
+    leaf: (dirs, entry) => convert(dirs, entry, toc, every_item)
 });
 await makeStatic();
 
