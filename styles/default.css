@@ -68,6 +68,8 @@ code, pre {
 pre {
     border-radius: .5em;
     padding: .5em;
+
+    overflow: auto;
 }
 
 :not(pre) > code {
