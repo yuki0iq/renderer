@@ -1,7 +1,5 @@
-header, footer {
-    hr {
-        border: .1em solid;
-    }
+hr {
+    border: .1em solid;
 }
 
 header > h1 {
@@ -30,17 +28,13 @@ h2 {
 }
 
 @media (prefers-color-scheme: dark) {
-    header, footer { 
-        hr {
-            border-color: #333333;
-        }
+    hr {
+        border-color: #333333;
     }
 }
 
 @media (prefers-color-scheme: light) {
-    header, footer { 
-        hr {
-            border-color: #f0f0f0;
-        }
+    hr {
+        border-color: #f0f0f0;
     }
 }
