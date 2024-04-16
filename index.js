@@ -101,44 +101,26 @@ async function renderToc(root, current_dirs, selected, toc) {
     `;
 }
 
-async function convert(dirs, entry, toc, every_item) {
-    const input_filename = path.join('Source', ...dirs, entry + '.md');
-    console.log(`Converting ${input_filename}...`);
+async function convert(dirs, entry, toc, toc_list, counter) {
+    const item = toc_list[counter];
 
-    const output_dir = path.join('Rendered', ...dirs);
-    const output_filename = path.join(output_dir, entry + '.html');
+    const rendered_toc = await renderToc(item.root, dirs, entry, toc);
 
-    const root = '../'.repeat(dirs.length);
-    const rendered_toc = await renderToc(root, dirs, entry, toc);
-
-    const self_path = formatPath(dirs, entry);
-    const self_index = every_item.indexOf(self_path);
-    const prev_ref = every_item.at(self_index - 1);
-    const next_ref = every_item.at(self_index + 1);
-
-    const formatNavigationLink = (ref, name) => !ref ? '' : `<div class="navigation-link">
-        <a href="${root + ref}">
-            ${name}
+    const navlink = (nav, name) => !nav ? '' : `<div class="navigation-link">
+        <a href="${item.root + nav.url}">
+            ${name}: ${nav.title}
         </a>
     </div>`;
     const navigation = `<div class="navigation">
-        ${formatNavigationLink(prev_ref, `Previous page`)}
+        ${navlink(toc_list[counter - 1], `Previous`)}
         <div class="navigation-filler"></div>
-        ${formatNavigationLink(next_ref, `Next page`)}
+        ${navlink(toc_list[counter + 1], `Next`)}
     </div>`;
 
-    const input = await fs.readFile(input_filename, 'utf8');
-    const content = md.render(input);
-
-    const title_regex = /<h1>(.+?)<\/h1>/;
-    const title = (content.match(title_regex) || []).at(1);
-    const headless_content = content.replace(title_regex, '');
-
-    const static_root = `${root}static`;
     const rendered = `<!DOCTYPE html><html>
         <head>
-            <title>${title}</title>
-            <link rel="stylesheet" href="${static_root}/default.css">
+            <title>${item.title}</title>
+            <link rel="stylesheet" href="${item.root}static/default.css">
         </head>
         <body>
             <div class="toc">
@@ -147,11 +129,11 @@ async function convert(dirs, entry, toc, every_item) {
             <div class="content-box">
                 <div class="content">
                     <header>
-                        <h1>${title}</h1>
+                        <h1>${item.title}</h1>
                         ${navigation}
                         <hr>
                     </header>
-                    ${headless_content}
+                    ${item.content}
                     <footer>
                         <hr>
                         ${navigation}
@@ -161,7 +143,7 @@ async function convert(dirs, entry, toc, every_item) {
         </body>
     </html>`;
 
-    await fs.writeFile(output_filename, rendered);
+    await fs.writeFile(item.output, rendered);
 }
 
 async function makeStatic() {
@@ -180,18 +162,41 @@ async function makeStatic() {
 async function flattenToc(toc) {
     let result = [];
 
+    async function resultify(dirs, entry) {
+        const input_filename = path.join('Source', ...dirs, entry + '.md');
+
+        const input = await fs.readFile(input_filename, 'utf8');
+        const content = md.render(input);
+
+        const title_regex = /<h1>(.+?)<\/h1>/;
+        const title = (content.match(title_regex) || []).at(1);
+        const headless_content = content.replace(title_regex, '');
+
+        return {
+            root: '../'.repeat(dirs.length),
+            output: path.join('Rendered', ...dirs, `${entry}.html`),
+            url: formatPath(dirs, entry),
+            title: title,
+            content: headless_content,
+        };
+    }
+
     await traverseToc(toc, {
-        leaf: async (dirs, entry) => result.push(formatPath(dirs, entry)),
+        leaf: async (dirs, entry) => result.push(await resultify(dirs, entry)),
     });
 
     return result;
 }
 
 const toc = await getToc();
-const every_item = await flattenToc(toc);
+const toc_list = await flattenToc(toc);
+let counter = 0;
 await traverseToc(toc, {
     pre: (dirs) => fs.mkdir(path.join('Rendered', ...dirs), { recursive: true }),
-    leaf: (dirs, entry) => convert(dirs, entry, toc, every_item)
+    leaf: (dirs, entry) => {
+        convert(dirs, entry, toc, toc_list, counter);
+        counter += 1;
+    },
 });
 await makeStatic();
 
