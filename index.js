@@ -12,8 +12,15 @@ const md = markdownit({
     typographer: true,
     highlight: function (str, lang) {
         if (lang === 'ascii') {
-            // First part is a dirty hack around markdown-it.
-            return '<pre></pre>' + diagramToSVG(str, { style: { 'font-size': ' ' } });
+            // Dark theme is done with CSS filter
+            const diagram = diagramToSVG(str, {
+                // Hack to make text consume fixed space
+                stretch: true,
+                // Hack to use default font size from browser
+                style: { 'font-size': ' ' }
+            });
+            // Somewhat incorrect assume: if you can't show SVGs you probably can't parse basic CSS
+            return `<pre style="display: none;">${str}</pre>${diagram}`;
         }
 
         if (lang && hljs.getLanguage(lang)) {
@@ -154,7 +161,7 @@ async function makeStatic() {
 
     await fs.copyFile(resolve("highlight.js/styles/a11y-light.css"), path.join(dir, 'highlight.default.css'));
     await fs.copyFile(resolve("highlight.js/styles/a11y-dark.css"), path.join(dir, 'highlight.dark.css'));
-    for (const style of ["default", "headers", "highlight", "links", "toc"]) {
+    for (const style of ["default", "diagram", "headers", "highlight", "links", "toc"]) {
         await fs.copyFile(resolve(`./styles/${style}.css`), path.join(dir, `${style}.css`));
     }
 }

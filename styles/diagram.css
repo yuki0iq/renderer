@@ -1,0 +1,15 @@
+.diagram {
+    display: block;
+    margin: auto;
+    overflow: auto;
+
+    background-color: #f0f0f0;
+    padding: .5em;
+    border-radius: .5em;
+}
+
+@media (prefers-color-scheme: dark) {
+    .diagram {
+        filter: invert(85%) sepia(20%) saturate(100%) hue-rotate(29deg) brightness(85%);
+    }
+}
