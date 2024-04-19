@@ -108,10 +108,10 @@ async function renderToc(root, current_dirs, selected, toc) {
     `;
 }
 
-async function convert(dirs, entry, toc, toc_list, counter) {
+async function convert(toc, toc_list, counter) {
     const item = toc_list[counter];
 
-    const rendered_toc = await renderToc(item.root, dirs, entry, toc);
+    const rendered_toc = await renderToc(item.root, item.dirs, item.entry, toc);
 
     const navlink = (nav, name) => !nav ? '' : `<div class="navigation-link">
         <a href="${item.root + nav.url}">
@@ -180,6 +180,8 @@ async function flattenToc(toc) {
         const headless_content = content.replace(title_regex, '');
 
         return {
+            dirs: dirs,
+            entry: entry,
             root: '../'.repeat(dirs.length),
             output: path.join('Rendered', ...dirs, `${entry}.html`),
             url: formatPath(dirs, entry),
@@ -189,6 +191,7 @@ async function flattenToc(toc) {
     }
 
     await traverseToc(toc, {
+        pre: (dirs) => fs.mkdir(path.join('Rendered', ...dirs), { recursive: true }),
         leaf: async (dirs, entry) => result.push(await resultify(dirs, entry)),
     });
 
@@ -197,13 +200,11 @@ async function flattenToc(toc) {
 
 const toc = await getToc();
 const toc_list = await flattenToc(toc);
-let counter = 0;
-await traverseToc(toc, {
-    pre: (dirs) => fs.mkdir(path.join('Rendered', ...dirs), { recursive: true }),
-    leaf: (dirs, entry) => {
-        convert(dirs, entry, toc, toc_list, counter);
-        counter += 1;
-    },
-});
-await makeStatic();
 
+await Promise.all(
+    toc_list.map(
+        (item, index) => convert(toc, toc_list, index)
+    )
+);
+
+await makeStatic();
