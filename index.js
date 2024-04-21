@@ -113,15 +113,15 @@ async function convert(toc, toc_list, counter) {
 
     const rendered_toc = await renderToc(item.root, item.dirs, item.entry, toc);
 
-    const navlink = (nav, name) => !nav ? '' : `<div class="navigation-link">
-        <a href="${item.root + nav.url}">
+    const navlink = (nav, rel, name) => !nav ? '' : `<div class="navigation-link">
+        <a rel="${rel}" href="${item.root + nav.url}">
             ${name}: ${nav.title}
         </a>
     </div>`;
     const navigation = `<div class="navigation">
-        ${navlink(toc_list[counter - 1], `Previous`)}
+        ${navlink(toc_list[counter - 1], 'prev', `Previous`)}
         <div class="navigation-filler"></div>
-        ${navlink(toc_list[counter + 1], `Next`)}
+        ${navlink(toc_list[counter + 1], 'next', `Next`)}
     </div>`;
 
     const rendered = `<!DOCTYPE html><html>
