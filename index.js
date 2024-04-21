@@ -126,6 +126,7 @@ async function convert(toc, toc_list, counter) {
 
     const rendered = `<!DOCTYPE html><html>
         <head>
+            <meta charset="utf8">
             <title>${item.title}</title>
             <link rel="stylesheet" href="${item.root}static/default.css">
         </head>
